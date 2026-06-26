@@ -113,4 +113,10 @@ with app.app_context():
         app.logger.warning('Admin account was not created because ADMIN_EMAIL or ADMIN_PASSWORD is not configured.')
 
 if __name__ == '__main__':
-    app.run(debug=debug_mode, port=5000)
+    # Use PORT from environment (Replit/hosts provide it) and bind to 0.0.0.0
+    port_env = os.environ.get('PORT', '')
+    try:
+        port = int(port_env) if port_env else 5000
+    except ValueError:
+        port = 5000
+    app.run(debug=debug_mode, host='0.0.0.0', port=port)
