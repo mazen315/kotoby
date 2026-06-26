@@ -1,10 +1,9 @@
 venv/
 __pycache__/
 *.pyc
-.env
 uploads/
 instance/
 .vscode/
 .DS_Store
 venv/
-
+.env
