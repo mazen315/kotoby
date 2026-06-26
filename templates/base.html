@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kotoby - مكتبي</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#6366f1', // Indigo 500
+                        secondary: '#ec4899', // Pink 500
+                        dark: '#0f172a',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+    <nav class="glass sticky top-0 z-50 shadow-sm border-b border-white/20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center">
+                    <a href="{{ url_for('main.index') }}" class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+                        Kotoby
+                    </a>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin %}
+                            <a href="{{ url_for('main.admin_dashboard') }}" class="text-sm font-semibold text-slate-600 hover:text-primary transition">لوحة التحكم</a>
+                        {% else %}
+                            <a href="{{ url_for('main.dashboard') }}" class="px-4 py-2 text-sm font-semibold text-slate-700 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition" title="{{ current_user.email }}">لوحه التحكم</a>
+                        {% endif %}
+                        <a href="{{ url_for('main.logout') }}" class="px-4 py-2 text-sm font-semibold text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition">تسجيل خروج</a>
+                    {% else %}
+                        <a href="{{ url_for('main.login') }}" class="text-sm font-semibold text-slate-600 hover:text-primary transition">تسجيل الدخول</a>
+                        <a href="{{ url_for('main.register') }}" class="px-4 py-2 text-sm font-semibold text-white bg-primary rounded-lg hover:bg-indigo-600 shadow-md transition">حساب جديد</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 py-6 text-center text-slate-500 text-sm">
+            &copy; 2026 Kotoby. جميع الحقوق محفوظة.
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+        <script>
+            Swal.fire({
+                title: '{{ category | title }}',
+                text: '{{ message }}',
+                // قمنا بإضافة 'danger': 'error' ليتوافق مع تصنيفات فلاسك المتكررة عندك في كود البايثون
+                icon: { 'success': 'success', 'error': 'error', 'danger': 'error', 'warning': 'warning', 'info': 'info' }['{{ category }}'] || 'info',
+                confirmButtonText: 'موافق'
+            });
+        </script>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+</body>
+</html>

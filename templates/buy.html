@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-3xl shadow-sm border border-slate-100 mt-10">
+    <div class="text-center mb-8">
+        <h2 class="text-3xl font-extrabold text-dark">إتمام عملية الشراء</h2>
+        <p class="text-slate-500 mt-2">كتاب: <span class="font-bold text-primary">{{ book.title }}</span></p>
+    </div>
+
+    <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 mb-8 text-center">
+        <p class="text-lg text-slate-700 mb-2">قم بتحويل مبلغ <span class="font-bold text-2xl text-primary">{{ book.price }} ج.م</span></p>
+        <p class="text-slate-600 mb-4">عبر تطبيق إنستاباي (InstaPay) أو المحافظ الإلكترونية إلى الرقم التالي:</p>
+        <div class="bg-white px-6 py-4 rounded-xl border border-slate-200 inline-block">
+            <span class="text-3xl font-black text-dark tracking-wider select-all" dir="ltr">01155797679</span>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div>
+            <span class="block text-sm font-semibold text-slate-700 mb-2">صورة إيصال التحويل (Screenshot)</span>
+            <label for="receipt" class="cursor-pointer mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-xl hover:border-primary hover:bg-slate-50 transition">
+                <div class="space-y-1 text-center">
+                    <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                    <div class="flex text-sm text-slate-600 justify-center">
+                        <span class="relative font-medium text-primary hover:text-indigo-500">
+                            اختر ملف صورة أو اسحبه هنا
+                        </span>
+                        <input id="receipt" name="receipt" type="file" class="sr-only" accept="image/*" required onchange="document.getElementById('file-name').textContent = 'تم اختيار: ' + this.files[0].name">
+                    </div>
+                    <p class="text-xs text-slate-500">PNG, JPG, GIF حتى 10MB</p>
+                    <p id="file-name" class="text-sm font-bold text-emerald-600 mt-2"></p>
+                </div>
+            </label>
+        </div>
+
+        <button type="submit" class="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-lg shadow-primary/30 text-lg font-bold text-white bg-primary hover:bg-indigo-600 focus:outline-none transition transform hover:-translate-y-0.5">
+            تأكيد الدفع وإرسال الطلب
+        </button>
+    </form>
+</div>
+{% endblock %}

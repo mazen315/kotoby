@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-dark">لوحة تحكم الإدارة</h1>
+    <p class="text-slate-500 mt-2">إدارة الكتب وطلبات الشراء</p>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <!-- Left Column: Add Book & Password -->
+    <div class="lg:col-span-1 space-y-8">
+        <!-- Add Book -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h3 class="text-xl font-bold text-dark mb-4 border-b border-slate-100 pb-2">إضافة كتاب جديد</h3>
+            <form action="{{ url_for('main.admin_add_book') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">اسم الكتاب</label>
+                    <input type="text" name="title" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">الوصف</label>
+                    <textarea name="description" rows="3" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">السعر (ج.م)</label>
+                    <input type="number" step="0.01" name="price" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">صورة الغلاف (Cover)</label>
+                    <input type="file" name="cover" accept="image/*" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-indigo-600">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">ملف الكتاب (PDF/ZIP)</label>
+                    <input type="file" name="book_file" required class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white hover:file:bg-indigo-600">
+                </div>
+                <button type="submit" class="w-full py-2 bg-dark text-white font-semibold rounded-lg hover:bg-slate-800 transition">إضافة الكتاب</button>
+            </form>
+        </div>
+
+        <!-- Change Password -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h3 class="text-xl font-bold text-dark mb-4 border-b border-slate-100 pb-2">تغيير كلمة المرور للإدمن</h3>
+            <form action="{{ url_for('main.admin_change_password') }}" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">كلمة المرور الجديدة</label>
+                    <input type="password" name="new_password" required class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-primary focus:border-primary outline-none">
+                </div>
+                <button type="submit" class="w-full py-2 bg-slate-200 text-dark font-semibold rounded-lg hover:bg-slate-300 transition">تحديث كلمة المرور</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Right Column: Requests & Books -->
+    <div class="lg:col-span-2 space-y-8">
+        <!-- Purchase Requests -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h3 class="text-xl font-bold text-dark mb-4 border-b border-slate-100 pb-2 flex items-center justify-between">
+                طلبات الشراء المعلقة
+                <span class="bg-amber-100 text-amber-800 text-xs font-bold px-2 py-1 rounded-full">{{ pending_requests|length }}</span>
+            </h3>
+            
+            {% if pending_requests %}
+            <div class="overflow-x-auto">
+                <table class="w-full text-right">
+                    <thead>
+                        <tr class="text-slate-500 text-sm border-b border-slate-100">
+                            <th class="pb-3 font-medium">المستخدم (الإيميل)</th>
+                            <th class="pb-3 font-medium">الكتاب</th>
+                            <th class="pb-3 font-medium">الإيصال</th>
+                            <th class="pb-3 font-medium">الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-sm">
+                        {% for req in pending_requests %}
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="py-4">{{ req.user.email }}</td>
+                            <td class="py-4 font-semibold text-primary">{{ req.book.title }}</td>
+                            <td class="py-4">
+                                <a href="{{ url_for('main.view_receipt', filename=req.receipt_filename) }}" target="_blank" class="text-blue-500 hover:underline inline-flex items-center">
+                                    عرض الإيصال
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                </a>
+                            </td>
+                            <td class="py-4 space-x-2 space-x-reverse">
+                                <form method="POST" action="{{ url_for('main.admin_approve', req_id=req.id) }}" class="inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="inline-block px-3 py-1 bg-green-100 text-green-700 font-semibold rounded hover:bg-green-200 transition">موافقة</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('main.admin_reject', req_id=req.id) }}" class="inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="inline-block px-3 py-1 bg-red-100 text-red-700 font-semibold rounded hover:bg-red-200 transition">رفض</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-slate-500 text-center py-4">لا توجد طلبات معلقة حالياً.</p>
+            {% endif %}
+        </div>
+
+        <!-- Books List -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+            <h3 class="text-xl font-bold text-dark mb-4 border-b border-slate-100 pb-2 flex items-center justify-between">
+                <span class="flex items-center gap-2">
+                    الكتب المرفوعة
+                    {% if books %}<span class="bg-primary/10 text-primary text-xs font-bold px-2.5 py-0.5 rounded-full">{{ books|length }}</span>{% endif %}
+                </span>
+                {% if books %}
+                <form method="POST" action="{{ url_for('main.admin_delete_all_books') }}" onsubmit="return confirm('هل أنت متأكد من حذف جميع الكتب؟ هذا الإجراء سيقوم بحذف كافة الكتب وكل المشتريات والطلبات المرتبطة بها نهائياً!');" class="inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="px-3 py-1.5 bg-red-500 text-white text-xs font-semibold rounded-lg hover:bg-red-600 transition shadow-sm hover:shadow shadow-red-500/20">
+                        حذف الكل
+                    </button>
+                </form>
+                {% endif %}
+            </h3>
+            {% if books %}
+            <div class="max-h-[600px] overflow-y-auto pr-1">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {% for book in books %}
+                    <div class="border border-slate-100 rounded-xl p-3 flex flex-col bg-white">
+                        <div class="flex items-start space-x-3 space-x-reverse">
+                            <img src="{{ url_for('static', filename='uploads/covers/' ~ book.cover_filename) }}" class="w-16 h-20 object-cover rounded shadow-sm">
+                            <div>
+                                <h4 class="font-bold text-dark text-sm line-clamp-1">{{ book.title }}</h4>
+                                <p class="text-primary font-semibold text-xs mt-1">{{ book.price }} ج.م</p>
+                                <p class="text-slate-400 text-xs mt-1">{{ book.purchases|length }} مبيعات</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-slate-100 flex gap-2">
+                            <a href="{{ url_for('main.admin_edit_book', book_id=book.id) }}"
+                               class="flex-1 px-2 py-1 bg-indigo-50 text-indigo-700 text-xs font-semibold rounded hover:bg-indigo-100 transition inline-flex items-center justify-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                تعديل
+                            </a>
+                            <form method="POST" action="{{ url_for('main.admin_delete_book', book_id=book.id) }}" onsubmit="return confirm('هل أنت متأكد من حذف هذا الكتاب؟ سيتم حذف جميع الطلبات والمشتريات المرتبطة به أيضاً.');" class="flex-1">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="w-full px-2 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded hover:bg-red-200 transition inline-flex items-center justify-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    حذف
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <p class="text-slate-500 text-center py-4">لم يتم رفع أي كتب بعد.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

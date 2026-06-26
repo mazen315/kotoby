@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+
+    <!-- Page Header -->
+    <div class="flex items-center gap-4 mb-8">
+        <a href="{{ url_for('main.admin_dashboard') }}" class="p-2 bg-white rounded-xl shadow-sm border border-slate-100 text-slate-500 hover:text-primary hover:border-primary/30 transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </a>
+        <div>
+            <h1 class="text-2xl font-extrabold text-dark">تعديل بيانات الكتاب</h1>
+            <p class="text-slate-400 text-sm mt-0.5">يمكنك تعديل أي حقل وسيتم الاحتفاظ بالباقي كما هو</p>
+        </div>
+    </div>
+
+    <form action="{{ url_for('main.admin_edit_book', book_id=book.id) }}" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- LEFT: Current Book Preview -->
+            <div class="lg:col-span-1 space-y-4">
+                <!-- Current Cover -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wide mb-4">الغلاف الحالي</h3>
+                    <div class="relative group rounded-xl overflow-hidden shadow-md">
+                        <img id="coverPreview"
+                             src="{{ url_for('static', filename='uploads/covers/' ~ book.cover_filename) }}"
+                             alt="{{ book.title }}"
+                             class="w-full aspect-[3/4] object-cover">
+                        <!-- Overlay on hover -->
+                        <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                            <span class="text-white text-xs font-semibold">انقر لتغيير الصورة</span>
+                        </div>
+                        <!-- Hidden file input triggers on click -->
+                        <label for="coverInput" class="absolute inset-0 cursor-pointer"></label>
+                    </div>
+                    <input type="file" id="coverInput" name="cover" accept="image/*"
+                           class="hidden" onchange="previewCover(this)">
+                    <p class="text-xs text-slate-400 text-center mt-3">انقر على الصورة لتغييرها<br>أو اتركها لإبقاء الحالية</p>
+                </div>
+
+                <!-- Current Book File -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                    <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">ملف الكتاب الحالي</h3>
+                    <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                        <div class="w-9 h-9 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-xs font-semibold text-dark truncate">{{ book.book_filename }}</p>
+                            <p class="text-xs text-slate-400 mt-0.5">الملف الحالي</p>
+                        </div>
+                    </div>
+                    <label for="bookFileInput" class="mt-3 w-full flex items-center justify-center gap-2 py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold rounded-lg cursor-pointer transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                        </svg>
+                        <span id="bookFileLabel">استبدال الملف</span>
+                    </label>
+                    <input type="file" id="bookFileInput" name="book_file" class="hidden"
+                           onchange="updateBookFileLabel(this)">
+                </div>
+            </div>
+
+            <!-- RIGHT: Edit Fields -->
+            <div class="lg:col-span-2 space-y-5">
+
+                <!-- Book Info Card -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-5">
+                    <h3 class="text-base font-bold text-dark border-b border-slate-100 pb-3">بيانات الكتاب</h3>
+
+                    <!-- Title -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            اسم الكتاب <span class="text-red-400">*</span>
+                        </label>
+                        <input type="text" name="title" value="{{ book.title }}" required
+                               class="w-full px-4 py-3 border border-slate-200 rounded-xl text-dark
+                                      focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
+                                      transition placeholder:text-slate-300"
+                               placeholder="أدخل اسم الكتاب">
+                    </div>
+
+                    <!-- Price -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            السعر (ج.م) <span class="text-red-400">*</span>
+                        </label>
+                        <div class="relative">
+                            <input type="number" name="price" value="{{ book.price }}" step="0.01" min="0" required
+                                   class="w-full px-4 py-3 border border-slate-200 rounded-xl text-dark
+                                          focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
+                                          transition placeholder:text-slate-300 pl-14"
+                                   placeholder="0.00">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-medium pointer-events-none">ج.م</span>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            الوصف <span class="text-red-400">*</span>
+                        </label>
+                        <textarea name="description" rows="6" required
+                                  class="w-full px-4 py-3 border border-slate-200 rounded-xl text-dark
+                                         focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
+                                         transition placeholder:text-slate-300 resize-none leading-relaxed"
+                                  placeholder="اكتب وصفاً مفصلاً للكتاب...">{{ book.description }}</textarea>
+                        <p class="text-xs text-slate-400 mt-1 text-left"><span id="charCount">0</span> حرف</p>
+                    </div>
+                </div>
+
+                <!-- Stats bar -->
+                <div class="bg-gradient-to-r from-slate-900 to-slate-700 rounded-2xl p-4 flex items-center justify-between text-white">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="text-sm font-medium text-slate-300">{{ book.purchases|length }} مشتري</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span class="text-sm font-medium text-slate-300">{{ book.requests|length }} طلب شراء</span>
+                    </div>
+                    <div class="text-xs text-slate-400 font-mono">#{{ book.id }}</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-3">
+                    <button type="submit"
+                            class="flex-1 py-3.5 bg-gradient-to-r from-primary to-indigo-600 text-white font-bold rounded-xl
+                                   hover:from-indigo-600 hover:to-primary shadow-lg shadow-primary/30
+                                   transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        حفظ التعديلات
+                    </button>
+                    <a href="{{ url_for('main.admin_dashboard') }}"
+                       class="px-6 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                        إلغاء
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Live cover image preview
+    function previewCover(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('coverPreview').src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // Update book file label
+    function updateBookFileLabel(input) {
+        const label = document.getElementById('bookFileLabel');
+        if (input.files && input.files[0]) {
+            const name = input.files[0].name;
+            label.textContent = name.length > 24 ? name.substring(0, 24) + '...' : name;
+        }
+    }
+
+    // Live character count for description
+    const textarea = document.querySelector('textarea[name="description"]');
+    const charCount = document.getElementById('charCount');
+    function updateCount() {
+        charCount.textContent = textarea.value.length;
+    }
+    textarea.addEventListener('input', updateCount);
+    updateCount(); // init on load
+</script>
+{% endblock %}
